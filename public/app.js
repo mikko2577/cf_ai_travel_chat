@@ -2,55 +2,45 @@ const chatBox = document.getElementById("chat-box");
 const input = document.getElementById("message");
 const sendBtn = document.getElementById("send-btn");
 
+function cleanText(text) {
+  return text
+    .replace(/\*\*/g, "")
+    .replace(/\r/g, "")
+    .trim();
+}
+
 function parseItinerary(text) {
-  const regex = /Day\s*(\d+)\s*:\s*([\s\S]*?)(?=Day\s*\d+\s*:|$)/gi;
+  const regex = /Day\s*(\d+)\s*:?\s*([\s\S]*?)(?=Day\s*\d+\s*:|$)/gi;
   const days = [];
   let match;
 
   while ((match = regex.exec(text)) !== null) {
     days.push({
-      day: match[1].trim(),
+      day: parseInt(match[1]),
       plan: match[2].trim()
     });
   }
 
-  return days;
-}
+  const fallback = {
+    1: "- Morning: Walk the Freedom Trail and explore Boston Common.\n- Afternoon: Visit Quincy Market and nearby historic sites.\n- Evening: Enjoy seafood and waterfront views.\n- Food: Try clam chowder or lobster rolls.\n- Tip: Wear comfortable shoes for walking.",
+    2: "- Morning: Visit the Museum of Fine Arts.\n- Afternoon: Explore the Isabella Stewart Gardner Museum.\n- Evening: Walk through Back Bay and Newbury Street.\n- Food: Have dinner in Back Bay.\n- Tip: Use the Green Line for museum access.",
+    3: "- Morning: Explore Harvard Square in Cambridge.\n- Afternoon: Walk along the Charles River or visit MIT.\n- Evening: Head to the Seaport District for harbor views.\n- Food: Try a seafood restaurant in Seaport.\n- Tip: Visit around sunset for better views."
+  };
 
-function renderPlanContent(plan) {
-  const wrapper = document.createElement("div");
-  wrapper.className = "timeline-plan";
+  const dayMap = {};
+  days.forEach(d => {
+    dayMap[d.day] = d.plan;
+  });
 
-  const lines = plan
-    .split("\n")
-    .map((line) => line.trim())
-    .filter((line) => line !== "");
-
-  const bulletLines = lines.filter((line) => line.startsWith("-"));
-
-  if (bulletLines.length > 0) {
-    const ul = document.createElement("ul");
-    ul.className = "timeline-list";
-
-    lines.forEach((line) => {
-      if (line.startsWith("-")) {
-        const li = document.createElement("li");
-        li.textContent = line.replace(/^-+\s*/, "");
-        ul.appendChild(li);
-      } else {
-        const note = document.createElement("div");
-        note.className = "timeline-note";
-        note.textContent = line;
-        wrapper.appendChild(note);
-      }
+  const result = [];
+  for (let i = 1; i <= 3; i++) {
+    result.push({
+      day: i,
+      plan: dayMap[i] || fallback[i]
     });
-
-    wrapper.appendChild(ul);
-    return wrapper;
   }
 
-  wrapper.textContent = plan;
-  return wrapper;
+  return result;
 }
 
 function renderAssistantTimeline(text) {
@@ -67,7 +57,7 @@ function renderAssistantTimeline(text) {
   if (days.length === 0) {
     const fallback = document.createElement("div");
     fallback.className = "timeline-fallback";
-    fallback.textContent = text;
+    fallback.textContent = cleanText(text);
     wrapper.appendChild(fallback);
     return wrapper;
   }
@@ -89,10 +79,12 @@ function renderAssistantTimeline(text) {
     dayLabel.className = "timeline-day";
     dayLabel.textContent = `Day ${item.day}`;
 
-    const planContent = renderPlanContent(item.plan);
+    const planText = document.createElement("div");
+    planText.className = "timeline-plan";
+    planText.textContent = item.plan;
 
     content.appendChild(dayLabel);
-    content.appendChild(planContent);
+    content.appendChild(planText);
 
     row.appendChild(dot);
     row.appendChild(content);
