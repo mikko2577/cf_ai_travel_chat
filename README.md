@@ -3,6 +3,7 @@
 AI-powered travel planning chat app built with Cloudflare Workers AI.
 
 Live Demo: https://cf_ai_travel_chat.jiachanli910.workers.dev/
+Demo2: https://aitravelguide.jiachanli910.workers.dev/
 
 ## What it does
 
